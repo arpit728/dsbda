@@ -1,0 +1,11 @@
+---
+title: "ChurnData"
+author: "hardCode"
+date: "February 21, 2017"
+output: html_document
+---
+```{r}
+
+library("caret")
+barplot(table(churn$Churn.),color="blue")
+apply(churn,2,function(x)sum(is.na(x)))

@@ -4,42 +4,60 @@ author: "bugkiller"
 date: "7 February 2017"
 output: html_document
 ---
-## My First Presentation  
+
+##LOADING OF HONE DATA  
+```{r}
+Price.House=read.csv("home_data.csv")
+names(Price.House)
+Price.House=Price.House[,-1]
+library("caret")
+trainIndex<-createDataPartition(Price.House$price,p=.70,list = FALSE)
+Price.HouseTrain<-Price.House[trainIndex,]
+head(Price.HouseTrain)
+str(Price.HouseTrain)
+summary(Price.HouseTrain)
+Price.HouseTest<-Price.House[-trainIndex,]
+head(Price.HouseTest)
+summary(Price.HouseTest)
+cor(Price.HouseTrain[,-c(1,2)])
+library("PerformanceAnalytics")
+my_data<-Price.HouseTrain[,-c(1,2)]
+chart.Correlation(my_data, histogram=TRUE,pch=19)
+library(corrplot)
+corrplot(my_data,type="upper",order="hclust",
+         tl.cal="black",tl.srt=45,addrect=2)
+
+##Running a model
+```{r }
+#options(show.signif.stars=F)
+Simple.Reg.Model=lm(price ~.,data=Price.HouseTrain)
+summary(Simple.Reg.Model)
+names(Simple.Reg.Model)
+confint(Simple.Reg.Model,level = 0.95)
+##goodness of fit
+```{r}
+anova(Simple.Reg.model)
+```
+##plotting regression diagnostics
 ```{r echo=FALSE}
-library(ggplot2)
-x<-rnorm(100)
-x
-y<-rnorm(100)
-y
-z=sample(c("M","F"),100,replace = T)
-dt=data.frame(x,y,z)
-head(dt)
-summary(dt)
-qplot(x,y,xlab = "X",ylab = "Y",main = "100 Random numbers",col=as.factor(z))
+par(mfrow=c(2,2))
+plot(Simple.Reg.model)
+```
 
-#Plot histogram
-```{r echo=F}
-hist(x,xlab = "1-random numbers",ylab = "freq",col="blue")
-abline(v=median(x),col="red",twd=2)
-rug(x)
-par(mfrow=c(1,3))
-hist(x)
-hist(y)
-rug(y)
-
-#Bar plot
-```{r echo=FALSE}
-tab=table(z)
-barplot(tab,col = "red")
-heatmap(table(x,y))
-
-#heatmap and barplot for iris data set
-```{r echo=FALSE}
-attach(iris)
-heatmap(as.matrix(iris[,-5]))
-barplot(table(iris$Species),col = "red")
-
-#Boxplot
-```{r echo=FALSE}
-boxplot(x,col = "cyan")
-
+#predicting model on test data and checking accuracy
+```{r}
+test.pred<-predict(Simple.Reg.model,price.HouseTest)
+actuals_preds<-data.frame(cbind(actuals=price.HouseTest$price,predicted=test.pred))
+head(actuals_preds)
+```
+##Testing Accuracy on Test set
+```{r}
+test.y=Price.HouseTest$price
+ss.total=sum((test.y - mean(test.y))^2)
+ss.residual=sum((test.y - test.pred)^2)
+ss.regression=sum((test.pred-mean(test.y))^2)
+ss.total-(ss.regression+ss.residual)
+##fraction of variability explained by the model
+ss.regression/ss.total*100
+R_SquareTrain=summary(Simple.Reg.Model)$r.squared*10
+R_SquareTrain
